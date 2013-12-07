@@ -3,7 +3,9 @@ lxmlbind
 
 Python LXML object binding.
 
-What is This?
+[![Build Status](https://travis-ci.org/jessemyers/lxmlbind.png)](https://travis-ci.org/jessemyers/lxmlbind)
+
+What is this?
 -------------
 
 The [xml.etree][1] library is a great way to manipulate XML in Python, but in most domains
