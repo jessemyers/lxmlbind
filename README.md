@@ -6,13 +6,17 @@ Python LXML object binding.
 What is This?
 -------------
 
-The `xml.etree` library is a great way to manipulate XML in Python, but in most domains
+The [xml.etree][1] library is a great way to manipulate XML in Python, but in most domains
 it is clearer to use objects that model your domain entities instead of manipulating
-the XML representation directly. The motivating example was [Jenkins][1] XML job
+the XML representation directly. The motivating example was [Jenkins][2] XML job
 configurations, but the same problem is likely to exist for any XML-based modeling.
 
-This project attempts to use Python [data descriptors][2] to bind an element tree
+This project attempts to use Python [data descriptors][3] to bind an element tree
 to Python objects.
+
+ [1]: http://lxml.de/tutorial.html
+ [2]: http://jenkins-ci.org/
+ [3]: http://docs.python.org/2/howto/descriptor.html
 
 Example
 -------
@@ -46,7 +50,3 @@ through instance attributes:
      
      # delete the first name entirely
      del person.first
-
-
- [1]: http://jenkins-ci.org/
- [2]: http://docs.python.org/2/howto/descriptor.html
