@@ -1,0 +1,158 @@
+"""
+Declarative object base class.
+"""
+from abc import ABCMeta
+
+from lxml import etree
+
+
+class Base(object):
+    """
+    Base class for objects using LXML object binding.
+    """
+    __metaclass__ = ABCMeta
+
+    def __init__(self, element=None, *args, **kwargs):
+        """
+        :param element: an optional root `lxml.etree` element
+        """
+        self._element = self._new_default_element(*args, **kwargs) if element is None else element
+
+    def _new_default_element(self, *args, **kwargs):
+        """
+        Generate a new default element for this object.
+
+        Subclasses may override this function to provide more complex default behavior.
+        """
+        return etree.Element(self._tag, attrib=self._attributes)
+
+    @property
+    def _tag(self):
+        """
+        Define the tag name of root element of the object.
+
+        By default, use the class name with a leading lower case. For PEP8 compatible
+        class names, this gives a lowerCamelCase name, which is a reasonable choice.
+        """
+        return self.__class__.__name__[0].lower() + self.__class__.__name__[1:]
+
+    @property
+    def _attributes(self):
+        """
+        Define attributes for the root element of the object.
+
+        By default, empty.
+        """
+        return {}
+
+    def to_xml(self, pretty_print=False):
+        """
+        Encode as XML string.
+        """
+        return etree.tostring(self._element, pretty_print=pretty_print)
+
+    @classmethod
+    def from_xml(cls, xml):
+        """
+        Decode from an XML string.
+        """
+        return cls(etree.XML(bytes(xml)))
+
+    def search(self, tags, element=None, create=False):
+        """
+        Search `lxml.etree` rooted at `element` for the first child
+        matching a sequence of element tags.
+
+        :param create: optionally, create the element path while traversing
+        :param element: the root element of the tree or None to use this object's element
+        :param tags: the list of tags to traverse
+        """
+        head, tail = tags[0], tags[1:]
+        parent = self._element if element is None else element
+        child = parent.find(head)
+        if child is None:
+            if create:
+                child = etree.SubElement(parent, head)
+            else:
+                return None
+        return self.search(child, tail, create) if tail else child
+
+    def __str__(self):
+        """
+        Return XML string.
+        """
+        return self.to_xml()
+
+    def __hash__(self):
+        """
+        Hash using XML element.
+        """
+        return self._element.__hash__()
+
+    def __eq__(self, other):
+        """
+        Compare using XML element equality, ignoring whitespace differences.
+        """
+        return eq_xml(self._element, other._element)
+
+    def __ne__(self, other):
+        """
+        Compare using XML element equality, ignoring whitespace differences.
+        """
+        return not self.__eq__(other)
+
+
+def eq_xml(this, that, ignore_attributes=None, ignore_whitespace=True):
+    """
+    XML comparison on `lxml.etree` elements.
+
+    :param this: an `lxml.etree` element
+    :param that: an `lxml.etree` element
+    :param ignore_attributes: an optional list of attributes to ignore
+    :param ignore_whitespace: whether whitespace should matter
+    """
+    ignore_attributes = ignore_attributes or []
+
+    # compare tags
+    if this.tag != that.tag:
+        return False
+
+    # compare attributes
+    def _get_attributes(attributes):
+        return {key: value for key, value in attributes.iteritems() if key not in ignore_attributes}
+
+    these_attributes = _get_attributes(this.attrib)
+    those_attributes = _get_attributes(that.attrib)
+    if these_attributes != those_attributes:
+        return False
+
+    # compare text
+    def _strip(tail):
+        if tail is None:
+            return None
+        return tail.strip() or None
+
+    this_text = _strip(this.text) if ignore_whitespace else this.text
+    that_text = _strip(that.text) if ignore_whitespace else that.text
+
+    if this_text != that_text:
+        return False
+
+    this_tail = _strip(this.tail) if ignore_whitespace else this.tail
+    that_tail = _strip(that.tail) if ignore_whitespace else that.tail
+
+    if this_tail != that_tail:
+        return False
+
+    # evaluate children lists
+    these_children = sorted(this.getchildren(), key=lambda element: element.tag)
+    those_children = sorted(that.getchildren(), key=lambda element: element.tag)
+    if len(these_children) != len(those_children):
+        return False
+
+    # recurse
+    for this_child, that_child in zip(these_children, those_children):
+        if not eq_xml(this_child, that_child, ignore_attributes, ignore_whitespace):
+            return False
+    else:
+        return True

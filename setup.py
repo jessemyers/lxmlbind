@@ -9,9 +9,9 @@ __build__ = ""
 
 readme = open("README.md").read()
 
-setup(name="cheddar",
+setup(name="lxmlbind",
       version=__version__ + __build__,
-      description="Python LXML object binding",
+      description="Python LXML object binding.",
       long_description=readme,
       author="Jesse Myers",
       author_email="jesse@locationlabs.com",
@@ -21,7 +21,7 @@ setup(name="cheddar",
           "nose>=1.3.0",
       ],
       install_requires=[
-          "xml",
+          "lxml>=3.2.4",
       ],
       tests_require=[
       ],
