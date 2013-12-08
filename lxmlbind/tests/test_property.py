@@ -8,7 +8,6 @@ from nose.tools import assert_raises, eq_
 from lxmlbind.api import Property
 from lxmlbind.tests.example import (Address,
                                     AddressBookEntry,
-                                    JenkinsMetadataString,
                                     Person)
 
 
@@ -136,32 +135,3 @@ def test_nested_types():
     eq_(entry2.address.state, "DC")
     eq_(entry2.address.zip_code, 20500)
     eq_(entry1, entry2)
-
-
-def test_jenkinsmetadatastring():
-    string1 = JenkinsMetadataString()
-    string1.name = "foo"
-    string1.description = None
-    string1.parent = None
-    string1.generated = True
-    string1.exposed = False
-    string1.value = "bar"
-
-    xml = dedent("""\
-        <metadata-string>
-          <name>foo</name>
-          <description></description>
-          <parent class="metadata-tree" reference="../../.."/>
-          <generated>true</generated>
-          <exposedToEnvironment>false</exposedToEnvironment>
-          <value>bar</value>
-        </metadata-string>""")
-    string2 = JenkinsMetadataString.from_xml(xml)
-    eq_(string2.name, "foo")
-    eq_(string2.description, None)
-    eq_(string2.parent, None)
-    eq_(string2.generated, True)
-    eq_(string2.exposed, False)
-    eq_(string2.value, "bar")
-
-    eq_(string1, string2)

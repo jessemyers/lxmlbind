@@ -2,10 +2,12 @@
 Declarative object base class.
 """
 from abc import ABCMeta
-from inspect import isdatadescriptor
+from inspect import getmro
 from logging import getLogger
 
 from lxml import etree
+
+from lxmlbind.property import Property
 
 
 class Base(object):
@@ -19,10 +21,7 @@ class Base(object):
         :param element: an optional root `lxml.etree` element
         """
         self._element = self._new_default_element(*args, **kwargs) if element is None else element
-        # proactivately __get__ properties so that required instances are created
-        for member in type(self).__dict__.values():
-            if isdatadescriptor(member):
-                member.__get__(self, type(self))
+        self._set_default_properties()
 
     def _new_default_element(self, *args, **kwargs):
         """
@@ -31,6 +30,17 @@ class Base(object):
         Subclasses may override this function to provide more complex default behavior.
         """
         return etree.Element(self._tag, attrib=self._attributes)
+
+    def _set_default_properties(self):
+        """
+        Iterate over properties and populate default values.
+        """
+        for class_ in getmro(self.__class__):
+            for member in class_.__dict__.values():
+                if not isinstance(member, Property) or not member.auto:
+                    continue
+                if member.__get__(self, self.__class__) is None:
+                    member.__set__(self, member.default)
 
     @property
     def _tag(self):
