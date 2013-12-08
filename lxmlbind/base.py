@@ -7,7 +7,7 @@ from logging import getLogger
 
 from lxml import etree
 
-from lxmlbind.property import Property
+from lxmlbind.property import Property, set_child
 
 
 class Base(object):
@@ -134,6 +134,10 @@ class Base(object):
         Compare using XML element equality, ignoring whitespace differences.
         """
         return not self.__eq__(other)
+
+    @classmethod
+    def property(cls, path, default=None, **kwargs):
+        return Property(path, get_func=cls, set_func=set_child, auto=True, default=default, **kwargs)
 
 
 def tag(name):

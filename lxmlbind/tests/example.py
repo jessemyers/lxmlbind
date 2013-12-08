@@ -1,7 +1,7 @@
 """
 Example objects for testing.
 """
-from lxmlbind.api import Base, Property
+from lxmlbind.api import Base, IntProperty, Property
 
 
 class Trivial(Base):
@@ -14,13 +14,13 @@ class Person(Base):
 
 
 class Address(Base):
-    street_number = Property("street/number", get_type=int)
+    street_number = IntProperty("street/number")
     street_name = Property("street/name")
     city = Property("city")
     state = Property("state")
-    zip_code = Property("zipCode", get_type=int)
+    zip_code = IntProperty("zipCode")
 
 
 class AddressBookEntry(Base):
-    person = Property("person", type=Person)
-    address = Property("address", type=Address)
+    person = Person.property("person")
+    address = Address.property("address")
