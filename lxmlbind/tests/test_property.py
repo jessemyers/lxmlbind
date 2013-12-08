@@ -6,7 +6,10 @@ from textwrap import dedent
 from nose.tools import assert_raises, eq_
 
 from lxmlbind.api import Property
-from lxmlbind.tests.example import Address, JenkinsMetadataString, Person
+from lxmlbind.tests.example import (Address,
+                                    AddressBookEntry,
+                                    JenkinsMetadataString,
+                                    Person)
 
 
 def test_person_get_class():
@@ -95,6 +98,50 @@ def test_address_types():
     eq_(address1, address2)
 
 
+def test_nested_types():
+    """
+    Test nested types.
+    """
+    entry1 = AddressBookEntry()
+    # XXX needs to be automatically created
+    entry1.person = Person()
+    entry1.person.first = "John"
+    entry1.person.last = "Doe"
+    # XXX needs to be automatically created
+    entry1.address = Address()
+    entry1.address.street_number = "1600"
+    entry1.address.street_name = "Pennsylvania Ave"
+    entry1.address.city = "Washington"
+    entry1.address.state = "DC"
+    entry1.address.zip_code = 20500
+
+    xml = dedent("""\
+        <addressBookEntry>
+          <person>
+            <first>John</first>
+            <last>Doe</last>
+          </person>
+          <address>
+            <street>
+              <number>1600</number>
+              <name>Pennsylvania Ave</name>
+            </street>
+            <city>Washington</city>
+            <state>DC</state>
+            <zipCode>20500</zipCode>
+          </address>
+        </addressBookEntry>""")
+    entry2 = AddressBookEntry.from_xml(xml)
+    eq_(entry2.person.first, "John")
+    eq_(entry2.person.last, "Doe")
+    eq_(entry2.address.street_number, 1600)
+    eq_(entry2.address.street_name, "Pennsylvania Ave")
+    eq_(entry2.address.city, "Washington")
+    eq_(entry2.address.state, "DC")
+    eq_(entry2.address.zip_code, 20500)
+    eq_(entry1, entry2)
+
+
 def test_jenkinsmetadatastring():
     string1 = JenkinsMetadataString()
     string1.name = "foo"
@@ -121,6 +168,4 @@ def test_jenkinsmetadatastring():
     eq_(string2.exposed, False)
     eq_(string2.value, "bar")
 
-    print string1.to_xml(pretty_print=True)
-    print string2.to_xml(pretty_print=True)
     eq_(string1, string2)

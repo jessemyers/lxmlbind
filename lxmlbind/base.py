@@ -61,7 +61,12 @@ class Base(object):
         """
         return cls(etree.XML(bytes(xml)))
 
-    def search(self, tags, element=None, create=False, attributes=None):
+    def search(self,
+               tags,
+               element=None,
+               create=False,
+               attributes=None,
+               logger=getLogger("lxmlbind.base")):
         """
         Search `lxml.etree` rooted at `element` for the first child
         matching a sequence of element tags.
@@ -76,6 +81,7 @@ class Base(object):
         child = parent.find(head)
         if child is None:
             if create:
+                logger.debug("Creating element '{}' for '{}'".format(head, parent.tag))
                 child = etree.SubElement(parent, head)
                 if attributes is not None and not tail:
                     child.attrib.update(attributes)

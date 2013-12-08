@@ -22,6 +22,11 @@ class Address(Base):
     zip_code = Property("zipCode", get_type=int)
 
 
+class AddressBookEntry(Base):
+    person = Property("person", type=Person)
+    address = Property("address", type=Address)
+
+
 @tag("metadata-string")
 class JenkinsMetadataString(Base):
     """

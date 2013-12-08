@@ -7,7 +7,12 @@ class Property(object):
     """
     A declarative property that also serves as a data descriptor.
     """
-    def __init__(self, path, get_type=str, set_type=str, **kwargs):
+    def __init__(self,
+                 path,
+                 get_type=str,
+                 set_type=str,
+                 type=None,
+                 **kwargs):
         """
         Create a property using an XPath-like expression that designates a specific
         element in the `lxml.etree`. True XPath syntax is not supported because it
@@ -22,6 +27,7 @@ class Property(object):
         self.tags = path.split("/")
         self.get_type = get_type
         self.set_type = set_type
+        self.type = type
         self.attributes = kwargs
 
     def __get__(self, instance, owner):
@@ -33,6 +39,8 @@ class Property(object):
         element = instance.search(self.tags)
         if element is None:
             return None
+        if self.type is not None:
+            return self.type(element)
         if element.text is None:
             return None
         return self.get_type(element.text)
@@ -44,6 +52,9 @@ class Property(object):
         If the element does not exist, it will be created (as will any missing parent elements).
         """
         element = instance.search(self.tags, create=True, attributes=self.attributes)
+        if self.type is not None:
+            # XXX what about right hand value?
+            return
         if value is None:
             element.text = None
         else:
