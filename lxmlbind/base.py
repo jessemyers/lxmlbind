@@ -75,7 +75,7 @@ class Base(object):
                 child = etree.SubElement(parent, head)
             else:
                 return None
-        return self.search(child, tail, create) if tail else child
+        return self.search(tail, child, create) if tail else child
 
     def __str__(self):
         """
