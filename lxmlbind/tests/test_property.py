@@ -3,7 +3,7 @@ Property descriptor tests.
 """
 from nose.tools import assert_raises, eq_
 
-from lxmlbind.property import Property
+from lxmlbind.api import Property
 from lxmlbind.tests.example import Person
 
 

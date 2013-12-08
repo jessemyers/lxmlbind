@@ -29,7 +29,7 @@ Assume that you have an API using XML representations of people with first and l
 
 *lxmlbind* makes it easy to define a `Person` object that maps to this structure:
 
-    from lxmlbind import Base, Property
+    from lxmlbind.api import Base, Property
 
     class Person(Base):
         first = Property("first")

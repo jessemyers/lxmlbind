@@ -2,7 +2,7 @@
 Example objects for testing.
 """
 
-from lxmlbind import Base, Property
+from lxmlbind.api import Base, Property
 
 
 class Trivial(Base):
