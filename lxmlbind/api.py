@@ -1,2 +1,2 @@
-from lxmlbind.base import Base, eq_xml, tag  # noqa
+from lxmlbind.base import Base, tag  # noqa
 from lxmlbind.property import Property  # noqa
