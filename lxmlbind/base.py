@@ -20,7 +20,14 @@ class Base(object):
         """
         :param element: an optional root `lxml.etree` element
         """
-        self._element = self._new_default_element(*args, **kwargs) if element is None else element
+        if element is None:
+            self._element = self._new_default_element(*args, **kwargs)
+        elif element.tag != self._tag:
+            raise Exception("'{}' object requires tag '{}', not '{}'".format(self.__class__,
+                                                                             self._tag,
+                                                                             element.tag))
+        else:
+            self._element = element
         self._set_default_properties()
 
     def _new_default_element(self, *args, **kwargs):

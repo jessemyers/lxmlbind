@@ -41,6 +41,11 @@ class MetadataString(MetadataBase):
     value = Property("value")
 
 
+@tag("metadata-number")
+class MetadataNumber(MetadataBase):
+    value = Property("value", get_type=long)
+
+
 @tag("metadata-date")
 class MetadataDate(MetadataBase):
     time = Property("value/time", get_type=long)
@@ -51,8 +56,6 @@ class MetadataDate(MetadataBase):
 def test_metadatastring():
     string1 = MetadataString()
     string1.name = "foo"
-    string1.generated = True
-    string1.exposed = False
     string1.value = "bar"
 
     xml = dedent("""\
@@ -60,7 +63,7 @@ def test_metadatastring():
           <name>foo</name>
           <description></description>
           <parent class="metadata-tree" reference="../../.."/>
-          <generated>true</generated>
+          <generated>false</generated>
           <exposedToEnvironment>false</exposedToEnvironment>
           <value>bar</value>
         </metadata-string>""")
@@ -68,11 +71,36 @@ def test_metadatastring():
     eq_(string2.name, "foo")
     eq_(string2.description, None)
     eq_(string2.parent, None)
-    eq_(string2.generated, True)
+    eq_(string2.generated, False)
     eq_(string2.exposed, False)
     eq_(string2.value, "bar")
 
     eq_(string1, string2)
+
+
+def test_metadatanumber():
+    number1 = MetadataNumber()
+    number1.name = "foo"
+    number1.value = 3
+
+    xml = dedent("""\
+        <metadata-number>
+          <name>foo</name>
+          <description></description>
+          <parent class="metadata-tree" reference="../../.."/>
+          <generated>false</generated>
+          <exposedToEnvironment>false</exposedToEnvironment>
+          <value>3</value>
+        </metadata-number>""")
+    number2 = MetadataNumber.from_xml(xml)
+    eq_(number2.name, "foo")
+    eq_(number2.description, None)
+    eq_(number2.parent, None)
+    eq_(number2.generated, False)
+    eq_(number2.exposed, False)
+    eq_(number2.value, 3)
+
+    eq_(number1, number2)
 
 
 def test_jenkinsmetadatadate():

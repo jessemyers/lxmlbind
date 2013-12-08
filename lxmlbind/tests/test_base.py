@@ -1,7 +1,7 @@
 """
 Baseline object tests.
 """
-from nose.tools import eq_, ok_
+from nose.tools import assert_raises, eq_, ok_
 
 from lxml import etree
 
@@ -33,6 +33,16 @@ def test_person():
     eq_(person.last, None)
     eq_(person.to_xml(), "<person/>")
     eq_(person.to_xml(), str(person))
+
+
+def test_tag_mismatch():
+    """
+    Exception raised in `from_xml` for mismatched element.
+    """
+    with assert_raises(Exception) as capture:
+        Trivial.from_xml("<mismatched/>")
+    eq_(capture.exception.message,
+        "'<class 'lxmlbind.tests.example.Trivial'>' object requires tag 'trivial', not 'mismatched'")
 
 
 def assert_generates_equivalent_xml(cls, raw_xml):
