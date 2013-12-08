@@ -2,6 +2,7 @@
 Declarative object base class.
 """
 from abc import ABCMeta
+from inspect import isdatadescriptor
 from logging import getLogger
 
 from lxml import etree
@@ -18,6 +19,10 @@ class Base(object):
         :param element: an optional root `lxml.etree` element
         """
         self._element = self._new_default_element(*args, **kwargs) if element is None else element
+        # proactivately __get__ properties so that required instances are created
+        for member in type(self).__dict__.values():
+            if isdatadescriptor(member):
+                member.__get__(self, type(self))
 
     def _new_default_element(self, *args, **kwargs):
         """
@@ -183,7 +188,7 @@ def eq_xml(this,
                                                                        that_tail))
         return False
 
-    # evaluate children lists
+    # evaluate children
     these_children = sorted(this.getchildren(), key=lambda element: element.tag)
     those_children = sorted(that.getchildren(), key=lambda element: element.tag)
     if len(these_children) != len(those_children):

@@ -5,7 +5,7 @@ from nose.tools import eq_, ok_
 
 from lxml import etree
 
-from lxmlbind.api import eq_xml
+from lxmlbind.base import eq_xml
 from lxmlbind.tests.example import Trivial, Person
 
 

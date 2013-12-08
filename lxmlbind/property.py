@@ -9,6 +9,7 @@ class Property(object):
     """
     def __init__(self,
                  path,
+                 required=False,
                  get_type=str,
                  set_type=str,
                  type=None,
@@ -19,6 +20,7 @@ class Property(object):
         complicates creation of parent elements in the __set__ implementation.
 
         :param path: a '/' deliminated path
+        :param required: whether this property will be automatically created; True if type is set
         :param get_type: a function use to transform __get__ output
         :param set_type: a function use to transform __set__ input
         :param kwargs: optional attributes applied to newly created leaf element on __set__
@@ -28,6 +30,7 @@ class Property(object):
         self.get_type = get_type
         self.set_type = set_type
         self.type = type
+        self.required = True if self.type is not None else required
         self.attributes = kwargs
 
     def __get__(self, instance, owner):
@@ -36,7 +39,7 @@ class Property(object):
         """
         if instance is None:
             return self
-        element = instance.search(self.tags)
+        element = instance.search(self.tags, create=self.required, attributes=self.attributes)
         if element is None:
             return None
         if self.type is not None:
@@ -52,8 +55,13 @@ class Property(object):
         If the element does not exist, it will be created (as will any missing parent elements).
         """
         element = instance.search(self.tags, create=True, attributes=self.attributes)
+        # nested type
         if self.type is not None:
-            # XXX what about right hand value?
+            if value is not None:
+                # replace existing element with assigned one
+                parent = element.getparent()
+                element.getparent().remove(element)
+                parent.append(value.element)
             return
         if value is None:
             element.text = None
@@ -64,7 +72,7 @@ class Property(object):
         """
         Provide delete access to an XML element (based on the property's path) as an object attribute.
         """
-        element = instance.search(self.tags)
+        element = instance.search(self.tags, create=self.required)
         if element is None:
             raise AttributeError("'{}' object has no attribute '{}'".format(type(instance), self.path))
         if element.getparent() is not None:

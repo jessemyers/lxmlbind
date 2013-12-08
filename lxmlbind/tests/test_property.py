@@ -103,12 +103,8 @@ def test_nested_types():
     Test nested types.
     """
     entry1 = AddressBookEntry()
-    # XXX needs to be automatically created
-    entry1.person = Person()
     entry1.person.first = "John"
     entry1.person.last = "Doe"
-    # XXX needs to be automatically created
-    entry1.address = Address()
     entry1.address.street_number = "1600"
     entry1.address.street_name = "Pennsylvania Ave"
     entry1.address.city = "Washington"
