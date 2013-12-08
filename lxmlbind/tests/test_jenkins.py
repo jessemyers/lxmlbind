@@ -55,9 +55,13 @@ class MetadataDate(MetadataBase):
     checked = Property("checked", get_func=get_bool, set_func=set_bool)
 
 
+class Children(Base):
+    pass
+
+
 @tag("metadata-tree")
 class MetadataTree(MetadataBase):
-    children = Property("children", auto=True, **{"class": "linked-list"})
+    children = Children.property(**{"class": "linked-list"})
 
 
 def test_metadatastring():
@@ -146,7 +150,12 @@ def test_jenkinsmetadatadate():
 
 
 def test_jenkinsmetadatatree():
+    string1 = MetadataString()
+    string1.name = "foo"
+    string1.value = "bar"
+
     tree1 = MetadataTree()
+    tree1.children.append(string1)
 
     xml = dedent("""\
         <metadata-tree>
@@ -154,13 +163,22 @@ def test_jenkinsmetadatatree():
           <parent class="metadata-tree" reference="../../.."/>
           <generated>false</generated>
           <exposedToEnvironment>false</exposedToEnvironment>
-          <children class="linked-list"/>
+          <children class="linked-list">
+            <metadata-string>
+              <name>foo</name>
+              <description></description>
+              <parent class="metadata-tree" reference="../../.."/>
+              <generated>false</generated>
+              <exposedToEnvironment>false</exposedToEnvironment>
+              <value>bar</value>
+            </metadata-string>
+          </children>
         </metadata-tree>""")
     tree2 = MetadataTree.from_xml(xml)
     eq_(tree2.description, None)
     eq_(tree2.parent, None)
     eq_(tree2.generated, False)
     eq_(tree2.exposed, False)
-    eq_(tree2.children, None)
+    eq_(len(tree2.children), 1)
 
     eq_(tree1, tree2)

@@ -6,7 +6,7 @@ from nose.tools import assert_raises, eq_, ok_
 from lxml import etree
 
 from lxmlbind.base import eq_xml
-from lxmlbind.tests.example import Trivial, Person
+from lxmlbind.tests.example import Person, PersonList, Trivial
 
 
 def test_trivial():
@@ -15,7 +15,7 @@ def test_trivial():
     """
     trivial = Trivial()
     ok_(trivial._element is not None)
-    eq_(trivial._element.tag, trivial._tag)
+    eq_(trivial._element.tag, trivial.tag())
     eq_(trivial._element.attrib, trivial._attributes)
     eq_(trivial.to_xml(), "<trivial/>")
     eq_(trivial.to_xml(), str(trivial))
@@ -27,12 +27,33 @@ def test_person():
     """
     person = Person()
     ok_(person._element is not None)
-    eq_(person._element.tag, person._tag)
+    eq_(person._element.tag, person.tag())
     eq_(person._element.attrib, person._attributes)
     eq_(person.first, None)
     eq_(person.last, None)
     eq_(person.to_xml(), "<person/>")
     eq_(person.to_xml(), str(person))
+
+
+def test_person_list():
+    """
+    Verify list operations.
+    """
+    person1 = Person()
+    person1.first = "John"
+
+    person2 = Person()
+    person2.first = "Jane"
+
+    person_list = PersonList()
+    eq_(len(person_list), 0)
+    person_list.append(person1)
+    eq_(len(person_list), 1)
+    person_list.append(person2)
+    eq_(len(person_list), 2)
+
+    eq_(person_list.to_xml(),
+        "<person-list><person><first>John</first></person><person><first>Jane</first></person></person-list>")
 
 
 def test_tag_mismatch():

@@ -1,7 +1,7 @@
 """
 Example objects for testing.
 """
-from lxmlbind.api import Base, IntProperty, Property
+from lxmlbind.api import Base, IntProperty, Property, tag
 
 
 class Trivial(Base):
@@ -22,5 +22,10 @@ class Address(Base):
 
 
 class AddressBookEntry(Base):
-    person = Person.property("person")
-    address = Address.property("address")
+    person = Person.property()
+    address = Address.property()
+
+
+@tag("person-list")
+class PersonList(Base):
+    pass

@@ -1,7 +1,6 @@
 """
 Declarative object base class.
 """
-from abc import ABCMeta
 from inspect import getmro
 from logging import getLogger
 
@@ -14,17 +13,15 @@ class Base(object):
     """
     Base class for objects using LXML object binding.
     """
-    __metaclass__ = ABCMeta
-
     def __init__(self, element=None, *args, **kwargs):
         """
         :param element: an optional root `lxml.etree` element
         """
         if element is None:
             self._element = self._new_default_element(*args, **kwargs)
-        elif element.tag != self._tag:
+        elif element.tag != self.tag():
             raise Exception("'{}' object requires tag '{}', not '{}'".format(self.__class__,
-                                                                             self._tag,
+                                                                             self.tag(),
                                                                              element.tag))
         else:
             self._element = element
@@ -36,7 +33,7 @@ class Base(object):
 
         Subclasses may override this function to provide more complex default behavior.
         """
-        return etree.Element(self._tag, attrib=self._attributes)
+        return etree.Element(self.tag(), attrib=self._attributes)
 
     def _set_default_properties(self):
         """
@@ -49,17 +46,16 @@ class Base(object):
                 if member.__get__(self, self.__class__) is None:
                     member.__set__(self, member.default)
 
-    @property
-    def _tag(self):
+    @classmethod
+    def tag(cls):
         """
-        Define the tag name of root element of the object.
+        Defines the expected tag of the root element of object's of this class.
 
-        By default, use the class name with a leading lower case. For PEP8 compatible
-        class names, this gives a lowerCamelCase name, which is a reasonable choice.
+        The default behavior is to use the class name with a leading lower case.
 
-        This property may be overridden in subclasses or via the tag() decorator.
+        For PEP8 compatible class names, this gives a lowerCamelCase name.
         """
-        return self.__class__.__name__[0].lower() + self.__class__.__name__[1:]
+        return cls.__name__[0].lower() + cls.__name__[1:]
 
     @property
     def _attributes(self):
@@ -111,6 +107,12 @@ class Base(object):
                 return None
         return self.search(tail, child, create) if tail else child
 
+    def append(self, child):
+        self._element.append(child._element)
+
+    def __len__(self):
+        return len(self._element)
+
     def __str__(self):
         """
         Return XML string.
@@ -127,6 +129,8 @@ class Base(object):
         """
         Compare using XML element equality, ignoring whitespace differences.
         """
+        if other is None:
+            return False
         return eq_xml(self._element, other._element)
 
     def __ne__(self, other):
@@ -136,18 +140,31 @@ class Base(object):
         return not self.__eq__(other)
 
     @classmethod
-    def property(cls, path, default=None, **kwargs):
-        return Property(path, get_func=cls, set_func=set_child, auto=True, default=default, **kwargs)
+    def property(cls, path=None, default=None, **kwargs):
+        """
+        Generate a property that matches this class.
+        """
+        return Property(cls.tag() if path is None else path,
+                        get_func=cls,
+                        set_func=set_child,
+                        auto=True,
+                        default=default,
+                        **kwargs)
 
 
 def tag(name):
     """
-    Class decorator that overrides the default behavior of the `Base._tag` property.
+    Class decorator that replaces `Base.tag()` with a function that returns name.
     """
     def wrapper(cls):
         if not issubclass(cls, Base):
             raise Exception("lxmlbind.base.tag decorator should only be used with subclasses of lxmlbind.base.Base")
-        cls._tag = name
+
+        @classmethod
+        def tag(cls):
+            return name
+
+        cls.tag = tag
         return cls
     return wrapper
 
