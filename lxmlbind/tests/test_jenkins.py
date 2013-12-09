@@ -7,20 +7,43 @@ from textwrap import dedent
 
 from nose.tools import eq_
 
-from lxmlbind.api import Base, LongProperty, Property, tag
+from lxmlbind.api import Base, List, LongProperty, Property, tag
 
 
-def get_bool(element):
+def get_bool(element, parent):
     if element.text is None:
         return None
     return element.text != "false"
 
 
-def set_bool(element, value):
+def set_bool(element, value, parent):
     if value is None:
         element.text = None
     else:
         element.text = "true" if value else "false"
+
+
+class BoolProperty(Property):
+    def __init__(self,
+                 path,
+                 get_func=get_bool,
+                 set_func=set_bool,
+                 default=False,
+                 *args,
+                 **kwargs):
+        super(BoolProperty, self).__init__(path,
+                                           get_func=get_func,
+                                           set_func=set_func,
+                                           default=default,
+                                           *args,
+                                           **kwargs)
+
+
+def set_parent_attributes(element, instance):
+    element.attrib.update({
+        "class": "metadata-tree" if instance._parent is None else instance._parent.tag(),
+        "reference": "../../..",
+    })
 
 
 class MetadataBase(Base):
@@ -30,9 +53,9 @@ class MetadataBase(Base):
     attributes with default behaviors.
     """
     description = Property("description", auto=True)
-    parent = Property("parent", auto=True, **{"class": "metadata-tree", "reference": "../../.."})
-    generated = Property("generated", auto=True, default=False, get_func=get_bool, set_func=set_bool)
-    exposed = Property("exposedToEnvironment", auto=True, default=False, get_func=get_bool, set_func=set_bool)
+    parent = Property("parent", auto=True, attributes_func=set_parent_attributes)
+    generated = BoolProperty("generated", auto=True)
+    exposed = BoolProperty("exposedToEnvironment", auto=True)
 
 
 @tag("metadata-string")
@@ -52,11 +75,21 @@ class MetadataDate(MetadataBase):
     name = Property("name")
     time = LongProperty("value/time")
     timezone = Property("value/timezone")
-    checked = Property("checked", get_func=get_bool, set_func=set_bool)
+    checked = BoolProperty("checked")
 
 
-class Children(Base):
-    pass
+class Children(List):
+    @classmethod
+    def of(cls):
+        def make_metadata(element, parent=None):
+            tag_to_class = {
+                "metadata-date": MetadataDate,
+                "metadata-number": MetadataNumber,
+                "metadata-string": MetadataString,
+                "metadata-tree": MetadataTree,
+            }
+            return tag_to_class[element.tag](element, parent)
+        return make_metadata
 
 
 @tag("metadata-tree")
@@ -180,5 +213,7 @@ def test_jenkinsmetadatatree():
     eq_(tree2.generated, False)
     eq_(tree2.exposed, False)
     eq_(len(tree2.children), 1)
+    eq_(tree2.children[0].__class__, MetadataString)
+    eq_(tree2.children[0].name, "foo")
 
     eq_(tree1, tree2)

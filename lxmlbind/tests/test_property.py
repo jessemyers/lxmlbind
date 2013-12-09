@@ -109,6 +109,8 @@ def test_nested_types():
     entry1.address.city = "Washington"
     entry1.address.state = "DC"
     entry1.address.zip_code = 20500
+    eq_(entry1.person._parent, entry1)
+    eq_(entry1.address._parent, entry1)
 
     xml = dedent("""\
         <addressBookEntry>

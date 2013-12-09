@@ -3,35 +3,36 @@ Declarative object properties that map to `lxml.etree` content.
 """
 
 
-def get_text(element):
+def get_text(element, parent):
     return element.text
 
 
-def get_int(element):
+def get_int(element, parent):
     if element.text is None:
         return None
     return int(element.text)
 
 
-def get_long(element):
+def get_long(element, parent):
     if element.text is None:
         return None
     return long(element.text)
 
 
-def set_text(element, value):
+def set_text(element, value, parent):
     if value is None:
         element.text = None
     else:
         element.text = str(value)
 
 
-def set_child(element, value):
+def set_child(element, value, parent):
     if value is not None:
         # replace existing element with assigned one
-        parent = element.getparent()
-        element.getparent().remove(element)
-        parent.append(value.element)
+        element_parent = element.getparent()
+        element_parent.remove(element)
+        element_parent.append(value.element)
+        value._parent = parent
 
 
 class Property(object):
@@ -42,6 +43,7 @@ class Property(object):
                  path,
                  get_func=get_text,
                  set_func=set_text,
+                 attributes_func=None,
                  auto=False,
                  default=None,
                  **kwargs):
@@ -63,6 +65,7 @@ class Property(object):
         self.set_func = set_func
         self.auto = auto
         self.default = default
+        self.attributes_func = attributes_func
         self.attributes = kwargs
 
     def __get__(self, instance, owner):
@@ -71,10 +74,10 @@ class Property(object):
         """
         if instance is None:
             return self
-        element = instance.search(self.tags, create=self.auto, attributes=self.attributes)
+        element = instance.search(self.tags, create=self.auto, set_attributes=self._set_attributes)
         if element is None:
             return None
-        return self.get_func(element)
+        return self.get_func(element, parent=instance)
 
     def __set__(self, instance, value):
         """
@@ -82,8 +85,8 @@ class Property(object):
 
         If the element does not exist, it will be created (as will any missing parent elements).
         """
-        element = instance.search(self.tags, create=True, attributes=self.attributes)
-        self.set_func(element, value)
+        element = instance.search(self.tags, create=True, set_attributes=self._set_attributes)
+        self.set_func(element, value, parent=instance)
 
     def __delete__(self, instance):
         """
@@ -97,16 +100,28 @@ class Property(object):
         else:
             raise Exception("Cannot detach root element")
 
+    def _set_attributes(self, element, instance):
+        """
+        Set attributes on newly created `lxml.etree` elements for this property.
+        """
+        if self.attributes_func is None:
+            element.attrib.update(self.attributes)
+        else:
+            self.attributes_func(element, instance)
+
 
 class IntProperty(Property):
     def __init__(self,
                  path,
                  get_func=get_int,
                  set_func=set_text,
-                 auto=False,
-                 default=None,
+                 *args,
                  **kwargs):
-        super(IntProperty, self).__init__(path, get_func, set_func, auto, default, **kwargs)
+        super(IntProperty, self).__init__(path,
+                                          get_func=get_func,
+                                          set_func=set_func,
+                                          *args,
+                                          **kwargs)
 
 
 class LongProperty(Property):
@@ -114,7 +129,10 @@ class LongProperty(Property):
                  path,
                  get_func=get_long,
                  set_func=set_text,
-                 auto=False,
-                 default=None,
+                 *args,
                  **kwargs):
-        super(LongProperty, self).__init__(path, get_func, set_func, auto, default, **kwargs)
+        super(LongProperty, self).__init__(path,
+                                           get_func=get_func,
+                                           set_func=set_func,
+                                           *args,
+                                           **kwargs)

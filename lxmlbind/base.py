@@ -1,7 +1,9 @@
 """
 Declarative object base class.
 """
+from functools import partial
 from inspect import getmro
+from itertools import imap
 from logging import getLogger
 
 from lxml import etree
@@ -13,9 +15,10 @@ class Base(object):
     """
     Base class for objects using LXML object binding.
     """
-    def __init__(self, element=None, *args, **kwargs):
+    def __init__(self, element=None, parent=None, *args, **kwargs):
         """
         :param element: an optional root `lxml.etree` element
+        :param parent: an optional parent pointer to another instance of `Base`
         """
         if element is None:
             self._element = self._new_default_element(*args, **kwargs)
@@ -25,6 +28,8 @@ class Base(object):
                                                                              element.tag))
         else:
             self._element = element
+
+        self._parent = parent
         self._set_default_properties()
 
     def _new_default_element(self, *args, **kwargs):
@@ -33,7 +38,7 @@ class Base(object):
 
         Subclasses may override this function to provide more complex default behavior.
         """
-        return etree.Element(self.tag(), attrib=self._attributes)
+        return etree.Element(self.tag())
 
     def _set_default_properties(self):
         """
@@ -57,15 +62,6 @@ class Base(object):
         """
         return cls.__name__[0].lower() + cls.__name__[1:]
 
-    @property
-    def _attributes(self):
-        """
-        Define attributes for the root element of the object.
-
-        By default, empty.
-        """
-        return {}
-
     def to_xml(self, pretty_print=False):
         """
         Encode as XML string.
@@ -83,7 +79,7 @@ class Base(object):
                tags,
                element=None,
                create=False,
-               attributes=None,
+               set_attributes=None,
                logger=getLogger("lxmlbind.base")):
         """
         Search `lxml.etree` rooted at `element` for the first child
@@ -101,17 +97,11 @@ class Base(object):
             if create:
                 logger.debug("Creating element '{}' for '{}'".format(head, parent.tag))
                 child = etree.SubElement(parent, head)
-                if attributes is not None and not tail:
-                    child.attrib.update(attributes)
+                if set_attributes is not None and not tail:
+                    set_attributes(child, self)
             else:
                 return None
         return self.search(tail, child, create) if tail else child
-
-    def append(self, child):
-        self._element.append(child._element)
-
-    def __len__(self):
-        return len(self._element)
 
     def __str__(self):
         """
@@ -152,9 +142,52 @@ class Base(object):
                         **kwargs)
 
 
+class List(Base):
+    """
+    Extension that supports treating elements as list of other types.
+    """
+    @classmethod
+    def of(cls):
+        """
+        Defines what this class is a list of.
+
+        :returns: a function that operates on `lxml.etree` elements, returning instances of `Base`.
+        """
+        return Base
+
+    def _of(self):
+        # bind parent
+        return partial(self.of(), parent=self)
+
+    def append(self, value):
+        self._element.append(value._element)
+        value._parent = self
+
+    def __getitem__(self, key):
+        item = self._of()(self._element.__getitem__(key))
+        return item
+
+    def __setitem__(self, key, value):
+        self._element.__setitem__(key, value._element)
+        value._parent = self
+
+    def __delitem__(self, key):
+        # Without keeping a parallel list of Base instances, it's not
+        # possible to detach the _parent pointer of values added via
+        # append() or __setitem__. So far, not keeping a parallel list
+        # is worth it.
+        self._element.__delitem__(key)
+
+    def __iter__(self):
+        return imap(self._of(), self._element.__iter__())
+
+    def __len__(self):
+        return len(self._element)
+
+
 def tag(name):
     """
-    Class decorator that replaces `Base.tag()` with a function that returns name.
+    Class decorator that replaces `Base.tag()` with a function that returns `name`.
     """
     def wrapper(cls):
         if not issubclass(cls, Base):
@@ -165,6 +198,23 @@ def tag(name):
             return name
 
         cls.tag = tag
+        return cls
+    return wrapper
+
+
+def of(child_type):
+    """
+    Class decorator that replaces `List.of()` with a function that returns `child_type`.
+    """
+    def wrapper(cls):
+        if not issubclass(cls, Base):
+            raise Exception("lxmlbind.base.of decorator should only be used with subclasses of lxmlbind.base.Base")
+
+        @classmethod
+        def of(cls):
+            return child_type
+
+        cls.of = of
         return cls
     return wrapper
 

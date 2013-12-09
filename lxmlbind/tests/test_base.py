@@ -15,8 +15,8 @@ def test_trivial():
     """
     trivial = Trivial()
     ok_(trivial._element is not None)
+    ok_(trivial._parent is None)
     eq_(trivial._element.tag, trivial.tag())
-    eq_(trivial._element.attrib, trivial._attributes)
     eq_(trivial.to_xml(), "<trivial/>")
     eq_(trivial.to_xml(), str(trivial))
 
@@ -27,8 +27,8 @@ def test_person():
     """
     person = Person()
     ok_(person._element is not None)
+    ok_(person._parent is None)
     eq_(person._element.tag, person.tag())
-    eq_(person._element.attrib, person._attributes)
     eq_(person.first, None)
     eq_(person.last, None)
     eq_(person.to_xml(), "<person/>")
@@ -45,15 +45,42 @@ def test_person_list():
     person2 = Person()
     person2.first = "Jane"
 
+    # test append and __len__
     person_list = PersonList()
     eq_(len(person_list), 0)
     person_list.append(person1)
     eq_(len(person_list), 1)
+    eq_(person1._parent, person_list)
+
     person_list.append(person2)
     eq_(len(person_list), 2)
+    eq_(person2._parent, person_list)
 
     eq_(person_list.to_xml(),
         "<person-list><person><first>John</first></person><person><first>Jane</first></person></person-list>")
+
+    # test __getitem__
+    eq_(person_list[0].first, "John")
+    eq_(person_list[0]._parent, person_list)
+    eq_(person_list[1].first, "Jane")
+    eq_(person_list[0]._parent, person_list)
+
+    # test __iter__
+    eq_([person.first for person in person_list], ["John", "Jane"])
+    ok_(all([person._parent == person_list for person in person_list]))
+
+    # test __delitem__
+    with assert_raises(IndexError):
+        del person_list[2]
+    del person_list[1]
+    eq_(len(person_list), 1)
+    eq_(person_list.to_xml(),
+        "<person-list><person><first>John</first></person></person-list>")
+
+    # test __setitem__
+    person_list[0] = person2
+    eq_(person_list.to_xml(),
+        "<person-list><person><first>Jane</first></person></person-list>")
 
 
 def test_tag_mismatch():
