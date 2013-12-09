@@ -40,7 +40,7 @@ class Property(object):
     A declarative property that also serves as a data descriptor.
     """
     def __init__(self,
-                 path,
+                 path=None,
                  get_func=get_text,
                  set_func=set_text,
                  attributes_func=None,
@@ -52,7 +52,7 @@ class Property(object):
         element in the `lxml.etree`. True XPath syntax is not supported because it
         complicates creation of parent elements in the __set__ implementation.
 
-        :param path: a '/' deliminated path
+        :param path: a '/' deliminated path; if omitted, defaults to the assigned name
         :param get_func: a function use to transform __get__ output
         :param set_func: a function use to transform __set__ input
         :param auto: whether this property will be automatically created
@@ -60,13 +60,16 @@ class Property(object):
         :param kwargs: optional attributes applied to newly created leaf element on __set__
         """
         self.path = path
-        self.tags = path.split("/")
         self.get_func = get_func
         self.set_func = set_func
         self.auto = auto
         self.default = default
         self.attributes_func = attributes_func
         self.attributes = kwargs
+
+    @property
+    def tags(self):
+        return self.path.split("/")
 
     def __get__(self, instance, owner):
         """
@@ -112,12 +115,12 @@ class Property(object):
 
 class IntProperty(Property):
     def __init__(self,
-                 path,
+                 path=None,
                  get_func=get_int,
                  set_func=set_text,
                  *args,
                  **kwargs):
-        super(IntProperty, self).__init__(path,
+        super(IntProperty, self).__init__(path=path,
                                           get_func=get_func,
                                           set_func=set_func,
                                           *args,
@@ -126,12 +129,12 @@ class IntProperty(Property):
 
 class LongProperty(Property):
     def __init__(self,
-                 path,
+                 path=None,
                  get_func=get_long,
                  set_func=set_text,
                  *args,
                  **kwargs):
-        super(LongProperty, self).__init__(path,
+        super(LongProperty, self).__init__(path=path,
                                            get_func=get_func,
                                            set_func=set_func,
                                            *args,

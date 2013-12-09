@@ -20,6 +20,11 @@ class Base(object):
         :param element: an optional root `lxml.etree` element
         :param parent: an optional parent pointer to another instance of `Base`
         """
+        self._parent = parent
+        self._set_element(element, *args, **kwargs)
+        self._init_properties()
+
+    def _set_element(self, element, *args, **kwargs):
         if element is None:
             self._element = self._new_default_element(*args, **kwargs)
         elif element.tag != self.tag():
@@ -29,9 +34,6 @@ class Base(object):
         else:
             self._element = element
 
-        self._parent = parent
-        self._set_default_properties()
-
     def _new_default_element(self, *args, **kwargs):
         """
         Generate a new default element for this object.
@@ -40,15 +42,17 @@ class Base(object):
         """
         return etree.Element(self.tag())
 
-    def _set_default_properties(self):
+    def _init_properties(self):
         """
-        Iterate over properties and populate default values.
+        Initialize property names and default values.
         """
         for class_ in getmro(self.__class__):
-            for member in class_.__dict__.values():
-                if not isinstance(member, Property) or not member.auto:
+            for name, member in class_.__dict__.iteritems():
+                if not isinstance(member, Property):
                     continue
-                if member.__get__(self, self.__class__) is None:
+                if member.path is None:
+                    member.path = name
+                if member.auto and member.__get__(self, self.__class__) is None:
                     member.__set__(self, member.default)
 
     @classmethod

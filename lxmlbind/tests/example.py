@@ -9,15 +9,15 @@ class Trivial(Base):
 
 
 class Person(Base):
-    first = Property("first")
-    last = Property("last")
+    first = Property()
+    last = Property()
 
 
 class Address(Base):
     street_number = IntProperty("street/number")
     street_name = Property("street/name")
-    city = Property("city")
-    state = Property("state")
+    city = Property()
+    state = Property()
     zip_code = IntProperty("zipCode")
 
 

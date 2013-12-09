@@ -25,13 +25,13 @@ def set_bool(element, value, parent):
 
 class BoolProperty(Property):
     def __init__(self,
-                 path,
+                 path=None,
                  get_func=get_bool,
                  set_func=set_bool,
                  default=False,
                  *args,
                  **kwargs):
-        super(BoolProperty, self).__init__(path,
+        super(BoolProperty, self).__init__(path=path,
                                            get_func=get_func,
                                            set_func=set_func,
                                            default=default,
@@ -52,30 +52,30 @@ class MetadataBase(Base):
     `parent`, `generated`, and `exposedToEnvironent`. This base class defines those
     attributes with default behaviors.
     """
-    description = Property("description", auto=True)
-    parent = Property("parent", auto=True, attributes_func=set_parent_attributes)
-    generated = BoolProperty("generated", auto=True)
+    description = Property(auto=True)
+    parent = Property(auto=True, attributes_func=set_parent_attributes)
+    generated = BoolProperty(auto=True)
     exposed = BoolProperty("exposedToEnvironment", auto=True)
 
 
 @tag("metadata-string")
 class MetadataString(MetadataBase):
-    name = Property("name")
-    value = Property("value")
+    name = Property()
+    value = Property()
 
 
 @tag("metadata-number")
 class MetadataNumber(MetadataBase):
-    name = Property("name")
-    value = LongProperty("value")
+    name = Property()
+    value = LongProperty()
 
 
 @tag("metadata-date")
 class MetadataDate(MetadataBase):
-    name = Property("name")
+    name = Property()
     time = LongProperty("value/time")
     timezone = Property("value/timezone")
-    checked = BoolProperty("checked")
+    checked = BoolProperty()
 
 
 class Children(List):
