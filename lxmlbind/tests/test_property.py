@@ -8,6 +8,7 @@ from nose.tools import assert_raises, eq_
 from lxmlbind.api import Property
 from lxmlbind.tests.example import (Address,
                                     AddressBookEntry,
+                                    Filtered,
                                     Person)
 
 
@@ -137,3 +138,26 @@ def test_nested_types():
     eq_(entry2.address.state, "DC")
     eq_(entry2.address.zip_code, 20500)
     eq_(entry1, entry2)
+
+
+def test_filtered():
+    """
+    Test filtering.
+    """
+    filtered1 = Filtered()
+    eq_(filtered1.foo, None)
+    eq_(filtered1.bar, None)
+    filtered1.foo = "foo"
+    filtered1.bar = "bar"
+    eq_(filtered1.foo, "foo")
+    eq_(filtered1.bar, "bar")
+
+    xml = dedent("""\
+        <filtered>
+          <value type="foo">foo</value>
+          <value type="bar">bar</value>
+        </filtered>""")
+    filtered2 = Filtered.from_xml(xml)
+    eq_(filtered2.foo, "foo")
+    eq_(filtered2.bar, "bar")
+    eq_(filtered1, filtered2)

@@ -9,6 +9,7 @@ from logging import getLogger
 from lxml import etree
 
 from lxmlbind.property import Property, set_child
+from lxmlbind.search import search
 
 
 class Base(object):
@@ -21,26 +22,26 @@ class Base(object):
         :param parent: an optional parent pointer to another instance of `Base`
         """
         self._parent = parent
-        self._set_element(element, *args, **kwargs)
+        self._init_element(element, *args, **kwargs)
         self._init_properties()
 
-    def _set_element(self, element, *args, **kwargs):
+    def _init_element(self, element, *args, **kwargs):
         if element is None:
-            self._element = self._new_default_element(*args, **kwargs)
-        elif element.tag != self.tag():
+            self._element = self._create_element(self.tag(), *args, **kwargs)
+        elif element.tag == self.tag():
+            self._element = element
+        else:
             raise Exception("'{}' object requires tag '{}', not '{}'".format(self.__class__,
                                                                              self.tag(),
                                                                              element.tag))
-        else:
-            self._element = element
 
-    def _new_default_element(self, *args, **kwargs):
+    def _create_element(self, tag, *args, **kwargs):
         """
-        Generate a new default element for this object.
+        Generate a new element for this object.
 
         Subclasses may override this function to provide more complex default behavior.
         """
-        return etree.Element(self.tag())
+        return etree.Element(tag)
 
     def _init_properties(self):
         """
@@ -79,33 +80,13 @@ class Base(object):
         """
         return cls(etree.XML(bytes(xml)))
 
-    def search(self,
-               tags,
-               element=None,
-               create=False,
-               set_attributes=None,
-               logger=getLogger("lxmlbind.base")):
+    def search(self, property_, create=False):
         """
-        Search `lxml.etree` rooted at `element` for the first child
-        matching a sequence of element tags.
+        Search for property with instance.
 
-        :param tags: the list of tags to traverse
-        :param element: the root element of the tree or None to use this object's element
-        :param create: optionally, create the element path while traversing
-        :param attributes: optional attributes dictionary to set in the leaf element, when created
+        :param create: whether the property's elements be created if absent
         """
-        head, tail = tags[0], tags[1:]
-        parent = self._element if element is None else element
-        child = parent.find(head)
-        if child is None:
-            if create:
-                logger.debug("Creating element '{}' for '{}'".format(head, parent.tag))
-                child = etree.SubElement(parent, head)
-                if set_attributes is not None and not tail:
-                    set_attributes(child, self)
-            else:
-                return None
-        return self.search(tail, child, create) if tail else child
+        return search(self, property_, create)
 
     def __str__(self):
         """
@@ -149,6 +130,8 @@ class Base(object):
 class List(Base):
     """
     Extension that supports treating elements as list of other types.
+
+    Attempts to maintainer _parent references.
     """
     @classmethod
     def of(cls):
@@ -160,7 +143,6 @@ class List(Base):
         return Base
 
     def _of(self):
-        # bind parent
         return partial(self.of(), parent=self)
 
     def append(self, value):

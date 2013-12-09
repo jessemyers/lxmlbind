@@ -44,6 +44,7 @@ class Property(object):
                  get_func=get_text,
                  set_func=set_text,
                  attributes_func=None,
+                 filter_func=None,
                  auto=False,
                  default=None,
                  **kwargs):
@@ -55,6 +56,8 @@ class Property(object):
         :param path: a '/' deliminated path; if omitted, defaults to the assigned name
         :param get_func: a function use to transform __get__ output
         :param set_func: a function use to transform __set__ input
+        :param attributes_func: a function to create property element attributes
+        :param filter_func: a function to filter/search for this property witin parent's elements
         :param auto: whether this property will be automatically created
         :param default: default value to use
         :param kwargs: optional attributes applied to newly created leaf element on __set__
@@ -64,6 +67,7 @@ class Property(object):
         self.set_func = set_func
         self.auto = auto
         self.default = default
+        self.filter_func = filter_func
         self.attributes_func = attributes_func
         self.attributes = kwargs
 
@@ -77,7 +81,7 @@ class Property(object):
         """
         if instance is None:
             return self
-        element = instance.search(self.tags, create=self.auto, set_attributes=self._set_attributes)
+        element = instance.search(self, create=self.auto)
         if element is None:
             return None
         return self.get_func(element, parent=instance)
@@ -88,29 +92,20 @@ class Property(object):
 
         If the element does not exist, it will be created (as will any missing parent elements).
         """
-        element = instance.search(self.tags, create=True, set_attributes=self._set_attributes)
+        element = instance.search(self, create=True)
         self.set_func(element, value, parent=instance)
 
     def __delete__(self, instance):
         """
         Provide delete access to an XML element (based on the property's path) as an object attribute.
         """
-        element = instance.search(self.tags)
+        element = instance.search(self)
         if element is None:
             raise AttributeError("'{}' object has no attribute '{}'".format(instance.__class__, self.path))
         if element.getparent() is not None:
             element.getparent().remove(element)
         else:
             raise Exception("Cannot detach root element")
-
-    def _set_attributes(self, element, instance):
-        """
-        Set attributes on newly created `lxml.etree` elements for this property.
-        """
-        if self.attributes_func is None:
-            element.attrib.update(self.attributes)
-        else:
-            self.attributes_func(element, instance)
 
 
 class IntProperty(Property):

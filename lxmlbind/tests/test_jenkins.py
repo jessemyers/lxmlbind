@@ -39,21 +39,20 @@ class BoolProperty(Property):
                                            **kwargs)
 
 
-def set_parent_attributes(element, instance):
-    element.attrib.update({
-        "class": "metadata-tree" if instance._parent is None else instance._parent.tag(),
-        "reference": "../../..",
-    })
-
-
 class MetadataBase(Base):
     """
     All of the main Metadata types share a common set of attributes: `description`,
     `parent`, `generated`, and `exposedToEnvironent`. This base class defines those
     attributes with default behaviors.
     """
+    def get_parent_attributes(instance):
+        return {
+            "class": "metadata-tree" if instance._parent is None else instance._parent.tag(),
+            "reference": "../../..",
+        }
+
     description = Property(auto=True)
-    parent = Property(auto=True, attributes_func=set_parent_attributes)
+    parent = Property(auto=True, attributes_func=get_parent_attributes)
     generated = BoolProperty(auto=True)
     exposed = BoolProperty("exposedToEnvironment", auto=True)
 
