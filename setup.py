@@ -26,4 +26,5 @@ setup(name="lxmlbind",
       tests_require=[
       ],
       test_suite="lxmlbind.tests",
+      include_package_data=True,
       )
