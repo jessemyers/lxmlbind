@@ -4,3 +4,11 @@ python:
 - pypy
 install: pip install . --use-mirrors
 script: python setup.py nosetests
+deploy:
+  provider: pypi
+  user: jessemyers
+  password:
+    secure: gSsSOgtZvzJkqNCErOI0mxEvPi5DtFXkHWjxiY43HLxKtXv/P+sjAqectCJdF6nLzKbv6mtFuG8nBG22qh62PQWZAkNbyfXLiIoS+kBd0M9bzYswSJT6as/83nk5WC3bg1NgCA2RTpUutONt0KoAzwfpgJrJmUXoN40Qs4sn8x4=
+  on:
+    tags: true
+    repo: jessemyers/lxmlbind
