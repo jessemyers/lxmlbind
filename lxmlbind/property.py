@@ -31,7 +31,7 @@ def set_child(element, value, parent):
         # replace existing element with assigned one
         element_parent = element.getparent()
         element_parent.remove(element)
-        element_parent.append(value.element)
+        element_parent.append(value._element)
         value._parent = parent
 
 
