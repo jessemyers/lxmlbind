@@ -22,12 +22,12 @@ class Base(object):
         :param parent: an optional parent pointer to another instance of `Base`
         """
         self._parent = parent
-        self._init_element(element, **kwargs)
-        self._init_properties()
+        self._init_element(element)
+        self._init_properties(**kwargs)
 
-    def _init_element(self, element, **kwargs):
+    def _init_element(self, element):
         if element is None:
-            self._element = self._create_element(self.__class__.tag(), **kwargs)
+            self._element = self._create_element(self.__class__.tag())
         elif element.tag == self.__class__.tag():
             self._element = element
         else:
@@ -35,7 +35,7 @@ class Base(object):
                                                                              self.__class__.tag(),
                                                                              element.tag))
 
-    def _create_element(self, tag, **kwargs):
+    def _create_element(self, tag):
         """
         Generate a new element for this object.
 
@@ -43,7 +43,7 @@ class Base(object):
         """
         return etree.Element(tag, self.__class__.attributes())
 
-    def _init_properties(self):
+    def _init_properties(self, **kwargs):
         """
         Initialize property names and default values.
         """
@@ -53,8 +53,10 @@ class Base(object):
                     continue
                 if member.path is None:
                     member.path = name
-                if member.auto and member.__get__(self, self.__class__) is None:
-                    member.__set__(self, member.default)
+                if not member.auto and name not in kwargs:
+                    continue
+                if member.__get__(self, self.__class__) is None:
+                    member.__set__(self, kwargs.get(name, member.default))
 
     @classmethod
     def tag(cls):
@@ -122,7 +124,7 @@ class Base(object):
         return not self.__eq__(other)
 
     @classmethod
-    def property(cls, path=None, default=None, **kwargs):
+    def property(cls, path=None, default=None, auto=True, filter_func=None, **kwargs):
         """
         Generate a property that matches this class.
         """
@@ -130,7 +132,8 @@ class Base(object):
                         get_func=cls,
                         set_func=set_child,
                         attributes_func=lambda instance: cls.attributes(),
-                        auto=True,
+                        filter_func=filter_func,
+                        auto=auto,
                         default=default,
                         **kwargs)
 
