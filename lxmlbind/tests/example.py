@@ -18,6 +18,14 @@ class Person(Base):
     first = Property()
     last = Property()
 
+    @classmethod
+    def tag(cls):
+        return "person"
+
+    @classmethod
+    def attributes(cls):
+        return {"type": "object"}
+
 
 class Address(Base):
     """

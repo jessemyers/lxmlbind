@@ -16,32 +16,32 @@ class Base(object):
     """
     Base class for objects using LXML object binding.
     """
-    def __init__(self, element=None, parent=None, *args, **kwargs):
+    def __init__(self, element=None, parent=None, **kwargs):
         """
         :param element: an optional root `lxml.etree` element
         :param parent: an optional parent pointer to another instance of `Base`
         """
         self._parent = parent
-        self._init_element(element, *args, **kwargs)
+        self._init_element(element, **kwargs)
         self._init_properties()
 
-    def _init_element(self, element, *args, **kwargs):
+    def _init_element(self, element, **kwargs):
         if element is None:
-            self._element = self._create_element(self.tag(), *args, **kwargs)
-        elif element.tag == self.tag():
+            self._element = self._create_element(self.__class__.tag(), **kwargs)
+        elif element.tag == self.__class__.tag():
             self._element = element
         else:
             raise Exception("'{}' object requires tag '{}', not '{}'".format(self.__class__,
-                                                                             self.tag(),
+                                                                             self.__class__.tag(),
                                                                              element.tag))
 
-    def _create_element(self, tag, *args, **kwargs):
+    def _create_element(self, tag, **kwargs):
         """
         Generate a new element for this object.
 
         Subclasses may override this function to provide more complex default behavior.
         """
-        return etree.Element(tag)
+        return etree.Element(tag, self.__class__.attributes())
 
     def _init_properties(self):
         """
@@ -59,13 +59,20 @@ class Base(object):
     @classmethod
     def tag(cls):
         """
-        Defines the expected tag of the root element of object's of this class.
+        Defines the expected tag of the root element of objects of this class.
 
         The default behavior is to use the class name with a leading lower case.
 
         For PEP8 compatible class names, this gives a lowerCamelCase name.
         """
         return cls.__name__[0].lower() + cls.__name__[1:]
+
+    @classmethod
+    def attributes(cls):
+        """
+        Defines attributes for the root element of objects of this class.
+        """
+        return {}
 
     def to_xml(self, pretty_print=False):
         """
@@ -122,6 +129,7 @@ class Base(object):
         return Property(cls.tag() if path is None else path,
                         get_func=cls,
                         set_func=set_child,
+                        attributes_func=lambda instance: cls.attributes(),
                         auto=True,
                         default=default,
                         **kwargs)
@@ -184,6 +192,23 @@ def tag(name):
             return name
 
         cls.tag = tag
+        return cls
+    return wrapper
+
+
+def attributes(**kwargs):
+    """
+    Class decorator that replaces `Base.attributes()` with a function that returns `kwargs`.
+    """
+    def wrapper(cls):
+        if not issubclass(cls, Base):
+            raise Exception("lxmlbind.base.attributes decorator should only be used with subclasses of lxmlbind.base.Base")  # noqa
+
+        @classmethod
+        def attributes(cls):
+            return kwargs
+
+        cls.attributes = attributes
         return cls
     return wrapper
 

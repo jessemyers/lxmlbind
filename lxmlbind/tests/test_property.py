@@ -115,7 +115,7 @@ def test_nested_types():
 
     xml = dedent("""\
         <addressBookEntry>
-          <person>
+          <person type="object">
             <first>John</first>
             <last>Doe</last>
           </person>

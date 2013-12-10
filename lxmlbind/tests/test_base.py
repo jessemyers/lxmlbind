@@ -31,7 +31,7 @@ def test_person():
     eq_(person._element.tag, person.tag())
     eq_(person.first, None)
     eq_(person.last, None)
-    eq_(person.to_xml(), "<person/>")
+    eq_(person.to_xml(), """<person type="object"/>""")
     eq_(person.to_xml(), str(person))
 
 
@@ -57,7 +57,7 @@ def test_person_list():
     eq_(person2._parent, person_list)
 
     eq_(person_list.to_xml(),
-        "<person-list><person><first>John</first></person><person><first>Jane</first></person></person-list>")
+        """<person-list><person type="object"><first>John</first></person><person type="object"><first>Jane</first></person></person-list>""")  # noqa
 
     # test __getitem__
     eq_(person_list[0].first, "John")
@@ -75,12 +75,12 @@ def test_person_list():
     del person_list[1]
     eq_(len(person_list), 1)
     eq_(person_list.to_xml(),
-        "<person-list><person><first>John</first></person></person-list>")
+        """<person-list><person type="object"><first>John</first></person></person-list>""")
 
     # test __setitem__
     person_list[0] = person2
     eq_(person_list.to_xml(),
-        "<person-list><person><first>Jane</first></person></person-list>")
+        """<person-list><person type="object"><first>Jane</first></person></person-list>""")
 
 
 def test_tag_mismatch():

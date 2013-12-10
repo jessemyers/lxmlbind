@@ -7,7 +7,7 @@ from textwrap import dedent
 
 from nose.tools import eq_
 
-from lxmlbind.api import Base, List, LongProperty, Property, tag
+from lxmlbind.api import attributes, Base, List, LongProperty, Property, tag
 
 
 def get_bool(element, parent):
@@ -77,7 +77,9 @@ class MetadataDate(MetadataBase):
     checked = BoolProperty()
 
 
-class Children(List):
+@tag("children")
+@attributes(**{"class": "linked-list"})
+class MetadataChildren(List):
     @classmethod
     def of(cls):
         def make_metadata(element, parent=None):
@@ -93,7 +95,7 @@ class Children(List):
 
 @tag("metadata-tree")
 class MetadataTree(MetadataBase):
-    children = Children.property(**{"class": "linked-list"})
+    children = MetadataChildren.property()
 
 
 def test_metadatastring():
