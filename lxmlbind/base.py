@@ -1,9 +1,7 @@
 """
 Declarative object base class.
 """
-from functools import partial
 from inspect import getmro
-from itertools import imap
 from logging import getLogger
 
 from lxml import etree
@@ -27,12 +25,12 @@ class Base(object):
 
     def _init_element(self, element):
         if element is None:
-            self._element = self._create_element(self.__class__.tag())
-        elif element.tag == self.__class__.tag():
+            self._element = self._create_element(self.__class__._tag())
+        elif self.__class__.matches(element):
             self._element = element
         else:
             raise Exception("'{}' object requires tag '{}', not '{}'".format(self.__class__,
-                                                                             self.__class__.tag(),
+                                                                             self.__class__._tag(),
                                                                              element.tag))
 
     def _create_element(self, tag):
@@ -41,7 +39,7 @@ class Base(object):
 
         Subclasses may override this function to provide more complex default behavior.
         """
-        return etree.Element(tag, self.__class__.attributes())
+        return etree.Element(tag, self.__class__._attributes())
 
     def _init_properties(self, **kwargs):
         """
@@ -59,7 +57,7 @@ class Base(object):
                     member.__set__(self, kwargs.get(name, member.default))
 
     @classmethod
-    def tag(cls):
+    def _tag(cls):
         """
         Defines the expected tag of the root element of objects of this class.
 
@@ -70,11 +68,18 @@ class Base(object):
         return cls.__name__[0].lower() + cls.__name__[1:]
 
     @classmethod
-    def attributes(cls):
+    def _attributes(cls):
         """
         Defines attributes for the root element of objects of this class.
         """
         return {}
+
+    @classmethod
+    def matches(cls, element):
+        """
+        Check whether element tag matches class definition.
+        """
+        return cls._tag() == element.tag
 
     def to_xml(self, pretty_print=False):
         """
@@ -115,6 +120,8 @@ class Base(object):
         """
         if other is None:
             return False
+        if not isinstance(other, Base):
+            return False
         return eq_xml(self._element, other._element)
 
     def __ne__(self, other):
@@ -124,113 +131,28 @@ class Base(object):
         return not self.__eq__(other)
 
     @classmethod
-    def property(cls, path=None, default=None, auto=True, filter_func=None, **kwargs):
+    def property(cls,
+                 path=None,
+                 default=None,
+                 auto=True,
+                 filter_func=None,
+                 attributes_func=None,
+                 **kwargs):
         """
         Generate a property that matches this class.
         """
-        return Property(cls.tag() if path is None else path,
+        if attributes_func is None:
+            attributes_func = lambda instance: cls._attributes()
+        if path is None:
+            path = cls._tag()
+        return Property(path,
                         get_func=cls,
                         set_func=set_child,
-                        attributes_func=lambda instance: cls.attributes(),
+                        attributes_func=attributes_func,
                         filter_func=filter_func,
                         auto=auto,
                         default=default,
                         **kwargs)
-
-
-class List(Base):
-    """
-    Extension that supports treating elements as list of other types.
-
-    Attempts to maintainer _parent references.
-    """
-    @classmethod
-    def of(cls):
-        """
-        Defines what this class is a list of.
-
-        :returns: a function that operates on `lxml.etree` elements, returning instances of `Base`.
-        """
-        return Base
-
-    def _of(self):
-        return partial(self.of(), parent=self)
-
-    def append(self, value):
-        self._element.append(value._element)
-        value._parent = self
-
-    def __getitem__(self, key):
-        item = self._of()(self._element.__getitem__(key))
-        return item
-
-    def __setitem__(self, key, value):
-        self._element.__setitem__(key, value._element)
-        value._parent = self
-
-    def __delitem__(self, key):
-        # Without keeping a parallel list of Base instances, it's not
-        # possible to detach the _parent pointer of values added via
-        # append() or __setitem__. So far, not keeping a parallel list
-        # is worth it.
-        self._element.__delitem__(key)
-
-    def __iter__(self):
-        return imap(self._of(), self._element.__iter__())
-
-    def __len__(self):
-        return len(self._element)
-
-
-def tag(name):
-    """
-    Class decorator that replaces `Base.tag()` with a function that returns `name`.
-    """
-    def wrapper(cls):
-        if not issubclass(cls, Base):
-            raise Exception("lxmlbind.base.tag decorator should only be used with subclasses of lxmlbind.base.Base")
-
-        @classmethod
-        def tag(cls):
-            return name
-
-        cls.tag = tag
-        return cls
-    return wrapper
-
-
-def attributes(**kwargs):
-    """
-    Class decorator that replaces `Base.attributes()` with a function that returns `kwargs`.
-    """
-    def wrapper(cls):
-        if not issubclass(cls, Base):
-            raise Exception("lxmlbind.base.attributes decorator should only be used with subclasses of lxmlbind.base.Base")  # noqa
-
-        @classmethod
-        def attributes(cls):
-            return kwargs
-
-        cls.attributes = attributes
-        return cls
-    return wrapper
-
-
-def of(child_type):
-    """
-    Class decorator that replaces `List.of()` with a function that returns `child_type`.
-    """
-    def wrapper(cls):
-        if not issubclass(cls, Base):
-            raise Exception("lxmlbind.base.of decorator should only be used with subclasses of lxmlbind.base.Base")
-
-        @classmethod
-        def of(cls):
-            return child_type
-
-        cls.of = of
-        return cls
-    return wrapper
 
 
 def eq_xml(this,
