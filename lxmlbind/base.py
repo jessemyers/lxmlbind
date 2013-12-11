@@ -1,9 +1,7 @@
 """
 Declarative object base class.
 """
-from functools import partial
 from inspect import getmro
-from itertools import imap
 from logging import getLogger
 
 from lxml import etree
@@ -136,107 +134,6 @@ class Base(object):
                         auto=auto,
                         default=default,
                         **kwargs)
-
-
-class List(Base):
-    """
-    Extension that supports treating elements as list of other types.
-
-    Attempts to maintainer _parent references.
-    """
-    @classmethod
-    def of(cls):
-        """
-        Defines what this class is a list of.
-
-        :returns: a function that operates on `lxml.etree` elements, returning instances of `Base`.
-        """
-        return Base
-
-    def _of(self):
-        return partial(self.of(), parent=self)
-
-    def append(self, value):
-        self._element.append(value._element)
-        value._parent = self
-
-    def __getitem__(self, key):
-        item = self._of()(self._element.__getitem__(key))
-        return item
-
-    def __setitem__(self, key, value):
-        self._element.__setitem__(key, value._element)
-        value._parent = self
-
-    def __delitem__(self, key):
-        # Without keeping a parallel list of Base instances, it's not
-        # possible to detach the _parent pointer of values added via
-        # append() or __setitem__. So far, not keeping a parallel list
-        # is worth it.
-        self._element.__delitem__(key)
-
-    def __iter__(self):
-        return imap(self._of(), self._element.__iter__())
-
-    def __len__(self):
-        return len(self._element)
-
-
-def tag(name):
-    """
-    Class decorator that replaces `Base.tag()` with a function that returns `name`.
-    """
-    def wrapper(cls):
-        if not issubclass(cls, Base):
-            raise Exception("lxmlbind.base.tag decorator should only be used with subclasses of lxmlbind.base.Base")
-
-        @classmethod
-        def tag(cls):
-            return name
-
-        cls.tag = tag
-        return cls
-    return wrapper
-
-
-def attributes(**kwargs):
-    """
-    Class decorator that replaces `Base.attributes()` with a function that returns `kwargs`.
-    """
-    def wrapper(cls):
-        if not issubclass(cls, Base):
-            raise Exception("lxmlbind.base.attributes decorator should only be used with subclasses of lxmlbind.base.Base")  # noqa
-
-        @classmethod
-        def attributes(cls):
-            return kwargs
-
-        cls.attributes = attributes
-        return cls
-    return wrapper
-
-
-def of(*classes):
-    """
-    Class decorator that replaces `List.of()` with a function that matches classes.
-    """
-    def wrapper(cls):
-        if not issubclass(cls, Base):
-            raise Exception("lxmlbind.base.of decorator should only be used with subclasses of lxmlbind.base.Base")
-
-        tag_to_class = {
-            class_.tag(): class_ for class_ in classes
-        }
-
-        @classmethod
-        def of(cls):
-            def _of(element, parent=None):
-                return tag_to_class[element.tag](element, parent)
-            return _of
-
-        cls.of = of
-        return cls
-    return wrapper
 
 
 def eq_xml(this,
