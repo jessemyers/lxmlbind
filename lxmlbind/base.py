@@ -26,7 +26,7 @@ class Base(object):
     def _init_element(self, element):
         if element is None:
             self._element = self._create_element(self.__class__._tag())
-        elif element.tag == self.__class__._tag():
+        elif self.__class__.matches(element):
             self._element = element
         else:
             raise Exception("'{}' object requires tag '{}', not '{}'".format(self.__class__,
@@ -73,6 +73,13 @@ class Base(object):
         Defines attributes for the root element of objects of this class.
         """
         return {}
+
+    @classmethod
+    def matches(cls, element):
+        """
+        Check whether element tag matches class definition.
+        """
+        return cls._tag() == element.tag
 
     def to_xml(self, pretty_print=False):
         """
