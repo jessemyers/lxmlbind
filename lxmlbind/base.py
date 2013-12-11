@@ -216,17 +216,23 @@ def attributes(**kwargs):
     return wrapper
 
 
-def of(child_type):
+def of(*classes):
     """
-    Class decorator that replaces `List.of()` with a function that returns `child_type`.
+    Class decorator that replaces `List.of()` with a function that matches classes.
     """
     def wrapper(cls):
         if not issubclass(cls, Base):
             raise Exception("lxmlbind.base.of decorator should only be used with subclasses of lxmlbind.base.Base")
 
+        tag_to_class = {
+            class_.tag(): class_ for class_ in classes
+        }
+
         @classmethod
         def of(cls):
-            return child_type
+            def _of(element, parent=None):
+                return tag_to_class[element.tag](element, parent)
+            return _of
 
         cls.of = of
         return cls
