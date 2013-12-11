@@ -40,7 +40,7 @@ def attributes(**kwargs):
 
 def of(*classes):
     """
-    Class decorator that replaces `List.of()` with a function that matches classes.
+    Class decorator that replaces `List.of()` or `Dict.of` with a function that matches classes.
     """
     def wrapper(cls):
         if not issubclass(cls, Base):
@@ -57,5 +57,20 @@ def of(*classes):
             return for_tag
 
         cls._of = _of
+        return cls
+    return wrapper
+
+
+def key(key_func):
+    """
+    Class decorator that replaces `Dict._key()` with a function that maps elements to keys.
+    """
+    def wrapper(cls):
+
+        @classmethod
+        def _key(cls, element):
+            return key_func(element)
+
+        cls._key = _key
         return cls
     return wrapper

@@ -120,6 +120,8 @@ class Base(object):
         """
         if other is None:
             return False
+        if not isinstance(other, Base):
+            return False
         return eq_xml(self._element, other._element)
 
     def __ne__(self, other):
