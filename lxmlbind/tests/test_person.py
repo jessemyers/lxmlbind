@@ -1,24 +1,18 @@
 from lxml import etree
 from nose.tools import assert_raises, eq_, ok_
 
-from lxmlbind.api import Base, Property
+from lxmlbind.api import attributes, Base, Property, tag
 from lxmlbind.base import eq_xml
 
 
+@tag("person")
+@attributes(type="object")
 class Person(Base):
     """
     Example using basic properties.
     """
     first = Property()
     last = Property()
-
-    @classmethod
-    def tag(cls):
-        return "person"
-
-    @classmethod
-    def attributes(cls):
-        return {"type": "object"}
 
 
 def test_person():
@@ -28,7 +22,7 @@ def test_person():
     person = Person()
     ok_(person._element is not None)
     ok_(person._parent is None)
-    eq_(person._element.tag, person.tag())
+    eq_(person._element.tag, person._tag())
     eq_(person.first, None)
     eq_(person.last, None)
     eq_(person.to_xml(), """<person type="object"/>""")

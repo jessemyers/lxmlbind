@@ -25,12 +25,12 @@ class Base(object):
 
     def _init_element(self, element):
         if element is None:
-            self._element = self._create_element(self.__class__.tag())
-        elif element.tag == self.__class__.tag():
+            self._element = self._create_element(self.__class__._tag())
+        elif element.tag == self.__class__._tag():
             self._element = element
         else:
             raise Exception("'{}' object requires tag '{}', not '{}'".format(self.__class__,
-                                                                             self.__class__.tag(),
+                                                                             self.__class__._tag(),
                                                                              element.tag))
 
     def _create_element(self, tag):
@@ -39,7 +39,7 @@ class Base(object):
 
         Subclasses may override this function to provide more complex default behavior.
         """
-        return etree.Element(tag, self.__class__.attributes())
+        return etree.Element(tag, self.__class__._attributes())
 
     def _init_properties(self, **kwargs):
         """
@@ -57,7 +57,7 @@ class Base(object):
                     member.__set__(self, kwargs.get(name, member.default))
 
     @classmethod
-    def tag(cls):
+    def _tag(cls):
         """
         Defines the expected tag of the root element of objects of this class.
 
@@ -68,7 +68,7 @@ class Base(object):
         return cls.__name__[0].lower() + cls.__name__[1:]
 
     @classmethod
-    def attributes(cls):
+    def _attributes(cls):
         """
         Defines attributes for the root element of objects of this class.
         """
@@ -122,14 +122,24 @@ class Base(object):
         return not self.__eq__(other)
 
     @classmethod
-    def property(cls, path=None, default=None, auto=True, filter_func=None, **kwargs):
+    def property(cls,
+                 path=None,
+                 default=None,
+                 auto=True,
+                 filter_func=None,
+                 attributes_func=None,
+                 **kwargs):
         """
         Generate a property that matches this class.
         """
-        return Property(cls.tag() if path is None else path,
+        if attributes_func is None:
+            attributes_func = lambda instance: cls._attributes()
+        if path is None:
+            path = cls._tag()
+        return Property(path,
                         get_func=cls,
                         set_func=set_child,
-                        attributes_func=lambda instance: cls.attributes(),
+                        attributes_func=attributes_func,
                         filter_func=filter_func,
                         auto=auto,
                         default=default,

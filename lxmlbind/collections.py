@@ -15,7 +15,7 @@ class List(Base):
     Attempts to maintainer _parent references.
     """
     @classmethod
-    def of(cls):
+    def _of(cls):
         """
         Defines what this class is a list of.
 
@@ -23,15 +23,13 @@ class List(Base):
         """
         return Base
 
-    def _of(self):
-        return partial(self.of(), parent=self)
-
     def append(self, value):
         self._element.append(value._element)
         value._parent = self
 
     def __getitem__(self, key):
-        item = self._of()(self._element.__getitem__(key))
+        func = partial(self.__class__._of(), parent=self)
+        item = func(self._element.__getitem__(key))
         return item
 
     def __setitem__(self, key, value):
@@ -46,7 +44,8 @@ class List(Base):
         self._element.__delitem__(key)
 
     def __iter__(self):
-        return imap(self._of(), self._element.__iter__())
+        func = partial(self.__class__._of(), parent=self)
+        return imap(func, self._element.__iter__())
 
     def __len__(self):
         return len(self._element)

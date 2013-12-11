@@ -19,7 +19,7 @@ def test_trivial():
     trivial = Trivial()
     ok_(trivial._element is not None)
     ok_(trivial._parent is None)
-    eq_(trivial._element.tag, trivial.tag())
+    eq_(trivial._element.tag, trivial._tag())
     eq_(trivial.to_xml(), "<trivial/>")
     eq_(trivial.to_xml(), str(trivial))
 
