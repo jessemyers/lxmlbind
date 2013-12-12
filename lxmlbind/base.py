@@ -184,8 +184,9 @@ def eq_xml(this,
     those_attributes = _get_attributes(that.attrib)
     if these_attributes != those_attributes:
         if logger is not None:
-            logger.debug("Element attributes do not match: {} != {}".format(these_attributes,
-                                                                            those_attributes))
+            logger.debug("Element '{}' attributes do not match: {} != {}".format(this.tag,
+                                                                                 these_attributes,
+                                                                                 those_attributes))
         return False
 
     # compare text
@@ -199,8 +200,9 @@ def eq_xml(this,
 
     if this_text != that_text:
         if logger is not None:
-            logger.debug("Element text does not match: {} != {}".format(this_text,
-                                                                        that_text))
+            logger.debug("Element '{}' text does not match: {} != {}".format(this.tag,
+                                                                             this_text,
+                                                                             that_text))
         return False
 
     this_tail = _strip(this.tail) if ignore_whitespace else this.tail
@@ -208,8 +210,9 @@ def eq_xml(this,
 
     if this_tail != that_tail:
         if logger is not None:
-            logger.debug("Element tails do not match: {} != {}".format(this_tail,
-                                                                       that_tail))
+            logger.debug("Element '{}' tails do not match: {} != {}".format(this.tag,
+                                                                            this_tail,
+                                                                            that_tail))
         return False
 
     # evaluate children
@@ -217,8 +220,9 @@ def eq_xml(this,
     those_children = sorted(that.getchildren(), key=lambda element: element.tag)
     if len(these_children) != len(those_children):
         if logger is not None:
-            logger.debug("Element children length does not match: {} != {}".format(len(these_children),
-                                                                                   len(those_children)))
+            logger.debug("Element '{}' children length does not match: {} != {}".format(this.tag,
+                                                                                        len(these_children),
+                                                                                        len(those_children)))
         return False
 
     # recurse
