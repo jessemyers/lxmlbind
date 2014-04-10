@@ -1,3 +1,4 @@
+from copy import deepcopy
 from nose.tools import assert_raises, eq_, ok_
 import six
 
@@ -37,6 +38,17 @@ def test_person_list():
 
     eq_(person_list.to_xml(),
         six.b("""<person-list><person type="object"><first>John</first></person><person type="object"><first>Jane</first></person></person-list>"""))  # noqa
+
+    # test that append is preserving order
+    person1_copy = deepcopy(person1)
+    person2_copy = deepcopy(person2)
+    person_list_reverse = PersonList()
+    person_list_reverse.append(person2_copy)
+    person_list_reverse.append(person1_copy)
+    eq_(person_list[0], person_list_reverse[1])
+    eq_(person_list[1], person_list_reverse[0])
+    eq_(person_list_reverse.to_xml(),
+        """<person-list><person type="object"><first>Jane</first></person><person type="object"><first>John</first></person></person-list>""")  # noqa
 
     # test __getitem__
     eq_(person_list[0].first, "John")

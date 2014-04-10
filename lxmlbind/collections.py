@@ -26,6 +26,7 @@ class List(Base):
         return Base
 
     def append(self, value):
+        # This maintains ordering
         self._element.append(value._element)
         value._parent = self
 
