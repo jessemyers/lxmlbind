@@ -28,6 +28,7 @@ setup(name="lxmlbind",
       ],
       install_requires=[
           "lxml>=3.2.4",
+          "six>=1.10",
       ],
       tests_require=[
       ],

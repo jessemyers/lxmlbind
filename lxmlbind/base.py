@@ -5,6 +5,7 @@ from inspect import getmro
 from logging import getLogger
 
 from lxml import etree
+import six
 
 from lxmlbind.property import Property, set_child
 from lxmlbind.search import search
@@ -46,7 +47,7 @@ class Base(object):
         Initialize property names and default values.
         """
         for class_ in getmro(self.__class__):
-            for name, member in class_.__dict__.iteritems():
+            for name, member in six.iteritems(class_.__dict__):
                 if not isinstance(member, Property):
                     continue
                 if member.path is None:
@@ -178,7 +179,7 @@ def eq_xml(this,
 
     # compare attributes
     def _get_attributes(attributes):
-        return {key: value for key, value in attributes.iteritems() if key not in ignore_attributes}
+        return {key: value for key, value in six.iteritems(attributes) if key not in ignore_attributes}
 
     these_attributes = _get_attributes(this.attrib)
     those_attributes = _get_attributes(that.attrib)
