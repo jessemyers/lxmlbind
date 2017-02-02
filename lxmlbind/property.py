@@ -2,6 +2,12 @@
 Declarative object properties that map to `lxml.etree` content.
 """
 
+import sys
+
+# Python 3 got rid of `long` so we need to create it here.
+if sys.version_info >= (3, 0):
+    long = int
+
 
 def get_text(element, parent):
     return element.text
