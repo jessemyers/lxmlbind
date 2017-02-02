@@ -16,6 +16,12 @@ setup(name="lxmlbind",
       author="Jesse Myers",
       author_email="jesse@locationlabs.com",
       url="https://github.com/jessemyers/lxmlbind",
+      classifiers=[
+          'Development Status :: 5 - Production/Stable',
+          'Intended Audience :: Developers',
+          'License :: OSI Approved :: BSD License',
+          'Programming Language :: Python :: 2.7',
+      ],
       packages=find_packages(exclude=["*.tests"]),
       setup_requires=[
           "nose>=1.3.0",
