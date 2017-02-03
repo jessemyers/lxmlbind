@@ -2,9 +2,9 @@
 Property search support.
 """
 from logging import getLogger as get_logger
-from itertools import ifilter
 
 from lxml import etree
+from six.moves import filter as ifilter
 
 
 def search(instance, property_, create):

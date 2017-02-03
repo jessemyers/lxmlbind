@@ -1,8 +1,8 @@
 language: python
 python:
 - '2.7'
-- pypy
-install: pip install . --use-mirrors
+- '3.6'
+install: pip install .
 script: python setup.py nosetests
 deploy:
   provider: pypi
