@@ -1,6 +1,6 @@
 from lxml import etree
 from nose.tools import assert_raises, eq_, ok_
-import six
+from six import b
 
 from lxmlbind.api import attributes, Base, Property, tag
 from lxmlbind.base import eq_xml
@@ -26,7 +26,7 @@ def test_person():
     eq_(person._element.tag, person._tag())
     eq_(person.first, None)
     eq_(person.last, None)
-    eq_(person.to_xml(), six.b("""<person type="object"/>"""))
+    eq_(person.to_xml(), b("""<person type="object"/>"""))
 
 
 def assert_generates_equivalent_xml(cls, raw_xml):
@@ -81,7 +81,7 @@ def test_person_set():
     eq_(person.last, None)
     person.last = "Doe"
     eq_(person.last, "Doe")
-    eq_(person.to_xml(), six.b("<person><first>John</first><last>Doe</last></person>"))
+    eq_(person.to_xml(), b("<person><first>John</first><last>Doe</last></person>"))
 
 
 def test_person_delete():
@@ -93,7 +93,7 @@ def test_person_delete():
     # __delete__ works
     del person.first
     eq_(person.first, None)
-    eq_(person.to_xml(), six.b("<person/>"))
+    eq_(person.to_xml(), b("<person/>"))
 
     # cannot delete unassigned property
     with assert_raises(AttributeError) as capture:

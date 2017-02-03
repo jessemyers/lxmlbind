@@ -1,6 +1,6 @@
 from copy import deepcopy
 from nose.tools import assert_raises, eq_, ok_
-import six
+from six import b
 
 from lxmlbind.api import List, of, tag
 from lxmlbind.tests.test_person import Person
@@ -37,7 +37,7 @@ def test_person_list():
     eq_(person2._parent, person_list)
 
     eq_(person_list.to_xml(),
-        six.b("""<person-list><person type="object"><first>John</first></person><person type="object"><first>Jane</first></person></person-list>"""))  # noqa
+        b("""<person-list><person type="object"><first>John</first></person><person type="object"><first>Jane</first></person></person-list>"""))  # noqa
 
     # test that append is preserving order
     person1_copy = deepcopy(person1)
@@ -48,7 +48,7 @@ def test_person_list():
     eq_(person_list[0], person_list_reverse[1])
     eq_(person_list[1], person_list_reverse[0])
     eq_(person_list_reverse.to_xml(),
-        """<person-list><person type="object"><first>Jane</first></person><person type="object"><first>John</first></person></person-list>""")  # noqa
+        b"""<person-list><person type="object"><first>Jane</first></person><person type="object"><first>John</first></person></person-list>""")  # noqa
 
     # test __getitem__
     eq_(person_list[0].first, "John")
@@ -66,9 +66,9 @@ def test_person_list():
     del person_list[1]
     eq_(len(person_list), 1)
     eq_(person_list.to_xml(),
-        six.b("""<person-list><person type="object"><first>John</first></person></person-list>"""))
+        b("""<person-list><person type="object"><first>John</first></person></person-list>"""))
 
     # test __setitem__
     person_list[0] = person2
     eq_(person_list.to_xml(),
-        six.b("""<person-list><person type="object"><first>Jane</first></person></person-list>"""))
+        b("""<person-list><person type="object"><first>Jane</first></person></person-list>"""))
