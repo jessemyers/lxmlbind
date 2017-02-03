@@ -2,8 +2,10 @@
 Declarative object collection classes.
 """
 from functools import partial
-from itertools import ifilter, imap, izip
 
+from six.moves import filter as ifilter
+from six.moves import map as imap
+from six.moves import zip as izip
 
 from lxmlbind.api import Base
 

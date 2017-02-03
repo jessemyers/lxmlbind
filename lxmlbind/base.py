@@ -46,7 +46,7 @@ class Base(object):
         Initialize property names and default values.
         """
         for class_ in getmro(self.__class__):
-            for name, member in class_.__dict__.iteritems():
+            for name, member in class_.__dict__.items():
                 if not isinstance(member, Property):
                     continue
                 if member.path is None:
@@ -92,7 +92,7 @@ class Base(object):
         """
         Decode from an XML string.
         """
-        return cls(etree.XML(bytes(xml)))
+        return cls(etree.XML(xml))
 
     def search(self, property_, create=False):
         """
@@ -101,12 +101,6 @@ class Base(object):
         :param create: whether the property's elements be created if absent
         """
         return search(self, property_, create)
-
-    def __str__(self):
-        """
-        Return XML string.
-        """
-        return self.to_xml()
 
     def __hash__(self):
         """
@@ -178,7 +172,7 @@ def eq_xml(this,
 
     # compare attributes
     def _get_attributes(attributes):
-        return {key: value for key, value in attributes.iteritems() if key not in ignore_attributes}
+        return {key: value for key, value in attributes.items() if key not in ignore_attributes}
 
     these_attributes = _get_attributes(this.attrib)
     those_attributes = _get_attributes(that.attrib)
