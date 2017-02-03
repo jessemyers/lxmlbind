@@ -1,6 +1,8 @@
 from lxml import etree
 from nose.tools import assert_raises, eq_, ok_
 
+import six
+
 from lxmlbind.api import Base
 from lxmlbind.base import eq_xml
 
@@ -20,8 +22,7 @@ def test_trivial():
     ok_(trivial._element is not None)
     ok_(trivial._parent is None)
     eq_(trivial._element.tag, trivial._tag())
-    eq_(trivial.to_xml(), "<trivial/>")
-    eq_(trivial.to_xml(), str(trivial))
+    eq_(trivial.to_xml(), six.b("<trivial/>"))
 
 
 def test_tag_mismatch():
@@ -30,7 +31,7 @@ def test_tag_mismatch():
     """
     with assert_raises(Exception) as capture:
         Trivial.from_xml("<mismatched/>")
-    eq_(capture.exception.message,
+    eq_(str(capture.exception),
         "'<class 'lxmlbind.tests.test_trivial.Trivial'>' object requires tag 'trivial', not 'mismatched'")
 
 
@@ -40,7 +41,7 @@ def assert_generates_equivalent_xml(cls, raw_xml):
     """
     bound_object = cls.from_xml(raw_xml)
     encoded_xml = bound_object.to_xml()
-    ok_(eq_xml(etree.XML(bytes(encoded_xml)), etree.XML(bytes(raw_xml))))
+    ok_(eq_xml(etree.XML(encoded_xml), etree.XML(raw_xml)))
 
 
 def test_trivial_from_xml():

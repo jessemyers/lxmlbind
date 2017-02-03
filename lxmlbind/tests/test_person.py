@@ -1,5 +1,6 @@
 from lxml import etree
 from nose.tools import assert_raises, eq_, ok_
+import six
 
 from lxmlbind.api import attributes, Base, Property, tag
 from lxmlbind.base import eq_xml
@@ -25,8 +26,7 @@ def test_person():
     eq_(person._element.tag, person._tag())
     eq_(person.first, None)
     eq_(person.last, None)
-    eq_(person.to_xml(), """<person type="object"/>""")
-    eq_(person.to_xml(), str(person))
+    eq_(person.to_xml(), six.b("""<person type="object"/>"""))
 
 
 def assert_generates_equivalent_xml(cls, raw_xml):
@@ -35,7 +35,7 @@ def assert_generates_equivalent_xml(cls, raw_xml):
     """
     bound_object = cls.from_xml(raw_xml)
     encoded_xml = bound_object.to_xml()
-    ok_(eq_xml(etree.XML(bytes(encoded_xml)), etree.XML(bytes(raw_xml))))
+    ok_(eq_xml(etree.XML(encoded_xml), etree.XML(raw_xml)))
 
 
 def test_person_from_xml():
@@ -81,7 +81,7 @@ def test_person_set():
     eq_(person.last, None)
     person.last = "Doe"
     eq_(person.last, "Doe")
-    eq_(person.to_xml(), "<person><first>John</first><last>Doe</last></person>")
+    eq_(person.to_xml(), six.b("<person><first>John</first><last>Doe</last></person>"))
 
 
 def test_person_delete():
@@ -93,9 +93,9 @@ def test_person_delete():
     # __delete__ works
     del person.first
     eq_(person.first, None)
-    eq_(str(person), "<person/>")
+    eq_(person.to_xml(), six.b("<person/>"))
 
     # cannot delete unassigned property
     with assert_raises(AttributeError) as capture:
         del person.last
-    eq_(capture.exception.message, "'<class 'lxmlbind.tests.test_person.Person'>' object has no attribute 'last'")
+    eq_(str(capture.exception), "'<class 'lxmlbind.tests.test_person.Person'>' object has no attribute 'last'")
