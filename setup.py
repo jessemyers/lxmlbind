@@ -23,14 +23,14 @@ setup(name="lxmlbind",
           'Programming Language :: Python :: 2.7',
       ],
       packages=find_packages(exclude=["*.tests"]),
-      setup_requires=[
-          "nose>=1.3.0",
-      ],
       install_requires=[
           "lxml>=3.2.4",
           "six>=1.10",
       ],
       tests_require=[
+          "nose>=1.3.0",
+          "tox",
+          "tox-pyenv",
       ],
       test_suite="lxmlbind.tests",
       include_package_data=True,
