@@ -59,7 +59,7 @@ def test_person_list():
     eq_(person_list[0], person_list_reverse[1])
     eq_(person_list[1], person_list_reverse[0])
     eq_(person_list_reverse.to_xml(),
-        """<person-list><person type="object"><first>Jane</first></person><person type="object"><first>John</first></person></person-list>""")  # noqa
+        b"""<person-list><person type="object"><first>Jane</first></person><person type="object"><first>John</first></person></person-list>""")  # noqa
 
     # test __getitem__
     eq_(person_list[0].first, "John")
