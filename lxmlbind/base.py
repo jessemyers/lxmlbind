@@ -93,7 +93,7 @@ class Base(object):
         """
         Decode from an XML string.
         """
-        return cls(etree.XML(bytes(xml)))
+        return cls(etree.XML(xml))
 
     def search(self, property_, create=False):
         """
@@ -102,12 +102,6 @@ class Base(object):
         :param create: whether the property's elements be created if absent
         """
         return search(self, property_, create)
-
-    def __str__(self):
-        """
-        Return XML string.
-        """
-        return self.to_xml()
 
     def __hash__(self):
         """
